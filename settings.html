@@ -1,0 +1,31 @@
+<div id="auto-retry-settings" class="auto-retry-settings extension_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>自动重试</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div class="auto-retry-mode" role="radiogroup" aria-label="自动重试模式">
+                <input id="auto-retry-disabled" type="radio" name="auto-retry-mode" value="disabled">
+                <label for="auto-retry-disabled">不启用</label>
+
+                <input id="auto-retry-specific" type="radio" name="auto-retry-mode" value="specific">
+                <label for="auto-retry-specific">特定报错与空回</label>
+
+                <input id="auto-retry-all" type="radio" name="auto-retry-mode" value="all">
+                <label for="auto-retry-all">全部情况</label>
+            </div>
+
+            <div class="auto-retry-fields">
+                <label for="auto-retry-rpm">
+                    <span>最高重试 RPM</span>
+                    <input id="auto-retry-rpm" class="text_pole" type="number" min="1" step="1" inputmode="numeric">
+                </label>
+                <label for="auto-retry-count">
+                    <span>最高单次重试次数</span>
+                    <input id="auto-retry-count" class="text_pole" type="number" min="1" step="1" inputmode="numeric">
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
