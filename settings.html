@@ -21,6 +21,9 @@
                     <input id="auto-retry-content-enabled" type="checkbox">
                     <span>启用最后一条 AI 回复的内容重试</span>
                 </label>
+                <label for="auto-retry-content-delay">内容判断延迟（秒）</label>
+                <input id="auto-retry-content-delay" class="text_pole" type="number" min="0" max="3600" step="0.1" inputmode="decimal">
+                <small>生成调用结束并完成收尾后，等待指定时间再判断最新回复。默认 0 秒，可设 0–3600 秒；0 表示不额外等待。</small>
                 <label for="auto-retry-content-rules">关键词 / 正则（每行一条，任意命中）</label>
                 <textarea id="auto-retry-content-rules" class="text_pole" rows="5" placeholder="抱歉，我无法&#10;无法完成请求&#10;/sorry|cannot comply/i"></textarea>
                 <small>普通关键词区分大小写；正则格式为 /表达式/flags。无效正则会提示并跳过。</small>

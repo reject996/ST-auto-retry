@@ -67,6 +67,10 @@ export function installContentRetry({ getContext, getSettings, limiter, isBusy,
             // Generation cleanup and group turns can finish after GENERATION_ENDED.
             await waitWithSignal(50, current.controller.signal);
             while (isBusy()) await waitWithSignal(100, current.controller.signal);
+            // Start the configurable delay after generation cleanup, then read the latest text.
+            const delaySeconds = normalizeSettings(getSettings()).contentCheckDelaySeconds;
+            if (delaySeconds > 0) await waitWithSignal(delaySeconds * 1000, current.controller.signal);
+            while (isBusy()) await waitWithSignal(100, current.controller.signal);
             if (chain !== current || current.id !== identity(getContext())) return;
             const ctx = getContext();
             const last = lastAssistant(ctx.chat);

@@ -124,6 +124,9 @@ async function renderSettings() {
     const validate = () => { error.textContent = compileRules(rules.value).errors.join('\n'); };
     rules.addEventListener('input', () => { persistSettings({ contentRules: rules.value }); validate(); });
     validate();
+    const delay = document.getElementById('auto-retry-content-delay');
+    delay.value = String(settings.contentCheckDelaySeconds);
+    bindCommittedNumber(delay, 'contentCheckDelaySeconds');
     const minimum = document.getElementById('auto-retry-min-length');
     minimum.value = String(settings.minResponseLength);
     bindCommittedNumber(minimum, 'minResponseLength');

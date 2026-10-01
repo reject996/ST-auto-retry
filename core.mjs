@@ -39,6 +39,7 @@ export function createDefaultSettings() {
         contentEnabled: false,
         contentRules: '',
         minResponseLength: 0,
+        contentCheckDelaySeconds: 0,
     };
 }
 
@@ -50,6 +51,8 @@ export function normalizeSettings(settings) {
         mode: Object.values(RETRY_MODES).includes(settings.mode) ? settings.mode : defaults.mode,
         maxRetryRpm: normalizePositiveInteger(settings.maxRetryRpm, defaults.maxRetryRpm),
         maxRetries: normalizePositiveInteger(settings.maxRetries, defaults.maxRetries),
+        contentCheckDelaySeconds: Number.isFinite(Number(settings.contentCheckDelaySeconds))
+            ? Math.max(0, Math.min(3600, Number(settings.contentCheckDelaySeconds))) : defaults.contentCheckDelaySeconds,
         contentEnabled: settings.contentEnabled === true,
         contentRules: typeof settings.contentRules === 'string' ? settings.contentRules : '',
         minResponseLength: Number.isFinite(Number(settings.minResponseLength))

@@ -95,3 +95,76 @@ test('disabling while waiting prevents generation and duplicate end events do no
     h.state.settings.contentEnabled = false; release();
     await sleep(30); assert.equal(h.state.calls, 0); h.dispose();
 });
+
+test('content delay settings accept seconds and normalize invalid persisted values', () => {
+    assert.equal(normalizeSettings({}).contentCheckDelaySeconds, 0);
+    for (const value of [-1, 'bad', Infinity]) {
+        assert.equal(normalizeSettings({ contentCheckDelaySeconds: value }).contentCheckDelaySeconds, 0);
+    }
+    assert.equal(normalizeSettings({ contentCheckDelaySeconds: '0.15' }).contentCheckDelaySeconds, 0.15);
+    assert.equal(normalizeSettings({ contentCheckDelaySeconds: 99999 }).contentCheckDelaySeconds, 3600);
+});
+
+test('each generation waits the configured delay and duplicate end events do not bypass it', async () => {
+    const h = harness({ config: { contentCheckDelaySeconds: 0.15 }, replies: ['拒绝', '正常回复'] });
+    try {
+        h.begin('拒绝');
+        h.emit('GENERATION_ENDED');
+        await sleep(100);
+        assert.equal(h.state.calls, 0);
+        await sleep(160);
+        assert.equal(h.state.calls, 1);
+        await sleep(230);
+        assert.equal(h.state.calls, 2);
+        assert.deepEqual(h.state.errors, []);
+    } finally { h.dispose(); }
+});
+
+test('content is read after the delay, not when generation ends', async () => {
+    const h = harness({ config: { contentCheckDelaySeconds: 0.15 } });
+    try {
+        h.begin('正常回复');
+        await sleep(100);
+        h.ctx.chat[0].mes = '拒绝';
+        assert.equal(h.state.calls, 0);
+        await sleep(160);
+        assert.equal(h.state.calls, 1);
+    } finally { h.dispose(); }
+});
+
+test('cancellation, disabling, and updated accepted text prevent retry during the delay', async () => {
+    const actions = [
+        ...['GENERATION_STOPPED', 'CHAT_CHANGED', 'MESSAGE_EDITED', 'MESSAGE_DELETED'].map(name => h => h.emit(name)),
+        h => h.emit('GENERATION_STARTED', 'normal', {}, false),
+        h => { h.state.settings.contentEnabled = false; },
+        h => { h.state.settings.mode = 'disabled'; },
+        h => { h.ctx.chat[0].mes = '正常回复'; },
+        h => h.dispose(),
+    ];
+    await Promise.all(actions.map(async action => {
+        const h = harness({ config: { contentCheckDelaySeconds: 0.15 } });
+        try {
+            h.begin('拒绝');
+            await sleep(100);
+            action(h);
+            await sleep(160);
+            assert.equal(h.state.calls, 0);
+            assert.deepEqual(h.state.errors, []);
+        } finally { h.dispose(); }
+    }));
+});
+
+test('configured delay begins after generation is no longer busy', async () => {
+    let busy = true;
+    const h = harness({ config: { contentCheckDelaySeconds: 0.15 }, busy: () => busy });
+    try {
+        h.begin('拒绝');
+        await sleep(220);
+        assert.equal(h.state.calls, 0);
+        busy = false;
+        await sleep(100);
+        assert.equal(h.state.calls, 0);
+        await sleep(170);
+        assert.equal(h.state.calls, 1);
+    } finally { h.dispose(); }
+});
