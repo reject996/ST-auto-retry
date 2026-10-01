@@ -6,9 +6,9 @@
     "js": "index.js",
     "css": "style.css",
     "author": "123333 and Codex",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "homePage": "https://github.com/xfcgef/ST-auto-retry",
-    "auto_update": true,
+    "auto_update": false,
     "minimum_client_version": "1.12.0",
     "hooks": {
         "activate": "init"

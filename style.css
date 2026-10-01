@@ -109,3 +109,7 @@
         grid-template-columns: 1fr;
     }
 }
+
+.auto-retry-content { display: flex; flex-direction: column; gap: 8px; }
+.auto-retry-content textarea { resize: vertical; }
+#auto-retry-content-errors { color: #f49c91; white-space: pre-wrap; overflow-wrap: anywhere; }

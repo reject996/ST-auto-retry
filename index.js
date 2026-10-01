@@ -1,4 +1,5 @@
-import { saveSettingsDebounced } from '/script.js';
+import { compileRules, installContentRetry } from './content.mjs';
+import { saveSettingsDebounced, is_send_press } from '/script.js';
 import { extension_settings, renderExtensionTemplateAsync } from '/scripts/extensions.js';
 import {
     RETRY_MODES,
@@ -12,6 +13,7 @@ const SETTINGS_KEY = 'autoRetry';
 const MODULE_MARKER = '/scripts/extensions/';
 const FETCH_STATE_KEY = Symbol.for('SillyTavern.autoRetry.fetchState');
 let settings;
+let disposeContentRetry;
 
 function getExtensionPath() {
     const pathname = decodeURIComponent(new URL('.', import.meta.url).pathname);
@@ -39,6 +41,8 @@ function persistSettings(changes) {
 }
 
 function describeReason({ reason, status }) {
+    if (reason === 'content_match') return '最后一条 AI 回复命中内容规则';
+    if (reason === 'content_short') return '最后一条 AI 回复长度不足';
     if (reason === RETRY_REASONS.EMPTY_RESPONSE) return '检测到空回复';
     if (reason === RETRY_REASONS.NETWORK_ERROR) return '网络请求失败';
     if (status) return `API 返回 HTTP ${status}`;
@@ -111,11 +115,33 @@ async function renderSettings() {
     countInput.value = String(settings.maxRetries);
     bindCommittedNumber(rpmInput, 'maxRetryRpm');
     bindCommittedNumber(countInput, 'maxRetries');
+    const enabled = document.getElementById('auto-retry-content-enabled');
+    enabled.checked = settings.contentEnabled;
+    enabled.addEventListener('change', () => persistSettings({ contentEnabled: enabled.checked }));
+    const rules = document.getElementById('auto-retry-content-rules');
+    const error = document.getElementById('auto-retry-content-errors');
+    rules.value = settings.contentRules;
+    const validate = () => { error.textContent = compileRules(rules.value).errors.join('\n'); };
+    rules.addEventListener('input', () => { persistSettings({ contentRules: rules.value }); validate(); });
+    validate();
+    const minimum = document.getElementById('auto-retry-min-length');
+    minimum.value = String(settings.minResponseLength);
+    bindCommittedNumber(minimum, 'minResponseLength');
 }
 
 export async function init() {
     loadSettings();
     installFetchWrapper();
+    disposeContentRetry?.();
+    disposeContentRetry = installContentRetry({
+        getContext: () => SillyTavern.getContext(),
+        getSettings: () => settings,
+        limiter: globalThis[FETCH_STATE_KEY].limiter,
+        isBusy: () => is_send_press,
+        onRetry: reportRetry,
+        onLimit: () => globalThis.toastr?.warning('内容重试已达到次数上限，保留最后一次回复。', '自动重试'),
+        onError: error => console.error('[自动重试] 内容检查失败', error),
+    });
     await renderSettings();
 }
 

@@ -36,6 +36,9 @@ export function createDefaultSettings() {
         mode: RETRY_MODES.DISABLED,
         maxRetryRpm: 5,
         maxRetries: 5,
+        contentEnabled: false,
+        contentRules: '',
+        minResponseLength: 0,
     };
 }
 
@@ -47,6 +50,10 @@ export function normalizeSettings(settings) {
         mode: Object.values(RETRY_MODES).includes(settings.mode) ? settings.mode : defaults.mode,
         maxRetryRpm: normalizePositiveInteger(settings.maxRetryRpm, defaults.maxRetryRpm),
         maxRetries: normalizePositiveInteger(settings.maxRetries, defaults.maxRetries),
+        contentEnabled: settings.contentEnabled === true,
+        contentRules: typeof settings.contentRules === 'string' ? settings.contentRules : '',
+        minResponseLength: Number.isFinite(Number(settings.minResponseLength))
+            ? Math.max(0, Math.min(1000000, Math.trunc(Number(settings.minResponseLength)))) : 0,
     };
 }
 

@@ -52,12 +52,14 @@ function settings(mode, changes = {}) {
 
 test('defaults and invalid persisted settings normalize safely', () => {
     assert.deepEqual(createDefaultSettings(), {
+        ...createDefaultSettings(),
         mode: RETRY_MODES.DISABLED,
         maxRetryRpm: 5,
         maxRetries: 5,
     });
     assert.deepEqual(normalizeSettings({ mode: 'bad', maxRetryRpm: 0, maxRetries: 'x' }), createDefaultSettings());
     assert.deepEqual(normalizeSettings({ mode: RETRY_MODES.ALL, maxRetryRpm: '12', maxRetries: 3.9 }), {
+        ...createDefaultSettings(),
         mode: RETRY_MODES.ALL,
         maxRetryRpm: 12,
         maxRetries: 3,
